@@ -1,0 +1,7 @@
+JCI Q6 BOARD
+M:	Phil FLournoy <phil@itgembedded.com>
+S:	Maintained
+F:	board/jci/jciq6/
+F:	include/configs/jciq6.h
+F:	configs/jciq6_defconfig
+F:	configs/jciq6_spl_defconfig
