@@ -98,8 +98,8 @@
 /* Env settings */
 #define CONFIG_ENV_DEFAULT_UBT_FILE	"u-boot.imx"
 #define CONFIG_ENV_DEFAULT_IMG_FILE	"zImage"
-#define CONFIG_ENV_DEFAULT_FDT_FILE	"imx6q-Q6.dtb"
-#define CONFIG_ENV_DEFAULT_SCR_FILE	"boot_Q6.scr"
+#define CONFIG_ENV_DEFAULT_FDT_FILE	"imx6q-jciq6.dtb"
+#define CONFIG_ENV_DEFAULT_SCR_FILE	"boot-jciq6.scr"
 
 #define CONFIG_ENV_DEFAULT_ETH_ADDR         "00:0D:15:00:D1:75"
 #define CONFIG_ENV_DEFAULT_CLIENT_IP        "192.168.0.150"
