@@ -78,15 +78,11 @@
 #define CONFIG_USB_MAX_CONTROLLER_COUNT	2 /* Enabled USB controller number */
 #endif
 
-/* moved to DEFCONFIG 
-#ifdef CONFIG_MX6Q
-#define CONFIG_CMD_SATA
-#endif
-*/
-
 /*
  * SATA Configs
+ * although already included in DEFCONFIG, added define CONFIG_CMD_SATA to force sata command inclusion
  */
+#define CONFIG_CMD_SATA
 #ifdef CONFIG_CMD_SATA
 #define CONFIG_DWC_AHSATA
 #define CONFIG_SYS_SATA_MAX_DEVICE	1
