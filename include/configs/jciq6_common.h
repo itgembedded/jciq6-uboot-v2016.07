@@ -220,9 +220,11 @@
 	"video_args_hdmi=setenv video_args $video_args " \
 		"video=mxcfb${fb}:dev=hdmi,1280x720M@60,if=RGB24\0" \
 	"video_args_lvds=setenv video_args $video_args " \
-		"video=mxcfb${fb}:dev=ldb,LDB-XGA,if=RGB666\0" \
-	"video_args_lcd=setenv video_args $video_args " \
-		"video=mxcfb${fb}:dev=lcd,CLAA-WVGA,if=RGB666\0" \
+		"video=mxcfb${fb}:dev=ldb,LDB-XGA,if=RGB888\0" \
+	"video_args_1024=setenv video_args $video_args " \
+		"video=mxcfb${fb}:dev=ldb,LDB-XGA,if=RGB888\0" \
+	"video_args_640=setenv video_args $video_args " \
+		"video=mxcfb${fb}:dev=ldb,640x480@60,if=RGB666\0" \
 	"fb=0\0" \
 	"video_interfaces=hdmi\0" \
 	"video_args_script=" \
@@ -372,7 +374,7 @@
 #define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
 #endif
 
-/* Framebuffer */
+/* Framebuffer - arch/arm/imx-common/video.c needs displays, display_count */
 #if 0
 #define CONFIG_VIDEO
 #define CONFIG_VIDEO_IPUV3
@@ -386,7 +388,6 @@
 #define CONFIG_BMP_16BPP
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_VIDEO_BMP_LOGO
-/* #define CONFIG_IPUV3_CLK 260000000 */
 #define CONFIG_IPUV3_CLK 260000000
 #define CONFIG_IMX_HDMI
 #define CONFIG_IMX_VIDEO_SKIP
