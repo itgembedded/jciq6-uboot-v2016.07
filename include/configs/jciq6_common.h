@@ -296,8 +296,8 @@
 		"else run netboot; fi;\0" \
 	"netargs=setenv bootargs console=${console},${baudrate} " \
 		"root=/dev/nfs " \
-		VIDEO_ARGS \
-		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp rootwait rw\0" \
+		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp rootwait rw " \
+		VIDEO_ARGS "\0" \
 	"netboot=echo Booting from net ...; " \
 		"run check_j20; " \
 		VIDEO_ARGS_SCRIPT \
