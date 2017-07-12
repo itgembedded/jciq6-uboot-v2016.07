@@ -51,6 +51,9 @@ DECLARE_GLOBAL_DATA_PTR;
 #define RESET_OD_PAD_CTRL  (PAD_CTL_ODE | PAD_CTL_HYS |		\
 	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_PUS_100K_UP )
 
+#define RESET_PAD_CTRL  ( PAD_CTL_HYS |		\
+	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm | PAD_CTL_PUS_100K_UP )
+
 #define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_SPEED_MED | \
 		      PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
 
@@ -205,7 +208,22 @@ static void enable_lvds(struct display_info_t const *dev)
 }
 */
 
-/* not currently used - commented out below
+
+/* I2C1 = FRAM, PMIC */
+static struct i2c_pads_info i2c_pad_info0 = {
+	.scl = {
+		.i2c_mode = MX6_PAD_EIM_D21__I2C1_SCL | I2C_PAD,
+		.gpio_mode = MX6_PAD_EIM_D21__GPIO3_IO21 | I2C_PAD,
+		.gp = IMX_GPIO_NR(3, 21)
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_EIM_D28__I2C1_SDA | I2C_PAD,
+		.gpio_mode = MX6_PAD_EIM_D28__GPIO3_IO28 | I2C_PAD,
+		.gp = IMX_GPIO_NR(3, 28)
+	}
+};
+
+/* I2C2 = Touchscreen, HDMI, Temp */
 static struct i2c_pads_info i2c_pad_info1 = {
 	.scl = {
 		.i2c_mode = MX6_PAD_KEY_COL3__I2C2_SCL | I2C_PAD,
@@ -218,7 +236,20 @@ static struct i2c_pads_info i2c_pad_info1 = {
 		.gp = IMX_GPIO_NR(4, 13)
 	}
 };
-*/
+
+/* I2C3 = LCD */
+static struct i2c_pads_info i2c_pad_info2 = {
+	.scl = {
+		.i2c_mode = MX6_PAD_GPIO_5__I2C3_SCL | I2C_PAD,
+		.gpio_mode = MX6_PAD_GPIO_5__GPIO1_IO05 | I2C_PAD,
+		.gp = IMX_GPIO_NR(1, 5)
+	},
+	.sda = {
+		.i2c_mode = MX6_PAD_GPIO_16__I2C3_SDA | I2C_PAD,
+		.gpio_mode = MX6_PAD_GPIO_16__GPIO7_IO11 | I2C_PAD,
+		.gp = IMX_GPIO_NR(7, 11)
+	}
+};
 
 static void setup_spi(void)
 {
@@ -655,25 +686,36 @@ int board_early_init_f(void)
 }
 
 static iomux_v3_cfg_t const peripheral_reset_pad[] = {
-	MX6_PAD_EIM_A25__GPIO5_IO02 | MUX_PAD_CTRL(RESET_OD_PAD_CTRL)
+	MX6_PAD_EIM_A25__GPIO5_IO02 | MUX_PAD_CTRL(RESET_PAD_CTRL), 	// RSTOUTn (not ODE currently)
+	MX6_PAD_CSI0_DAT5__GPIO5_IO23 | MUX_PAD_CTRL(RESET_PAD_CTRL)	// TS_RSTn (not ODE currently)
+};
+
+static iomux_v3_cfg_t const peripheral_input_pad[] = {
+	MX6_PAD_CSI0_VSYNC__GPIO5_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL), 	// LCD1024
+	MX6_PAD_CSI0_DAT4__GPIO5_IO22 | MUX_PAD_CTRL(NO_PAD_CTRL)	// LCD640
 };
 
 int board_init(void)
 {
-	/* address of boot parameters */
+	// address of boot parameters 
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
-	//RESET Peripherals
-	imx_iomux_v3_setup_multiple_pads(peripheral_reset_pad,
-						 ARRAY_SIZE(peripheral_reset_pad));
-	gpio_set_value(IMX_GPIO_NR(5, 2), 0);
-	mdelay(2);
+	// RESET Peripherals
+	imx_iomux_v3_setup_multiple_pads(peripheral_reset_pad, ARRAY_SIZE(peripheral_reset_pad));
+	gpio_direction_output(IMX_GPIO_NR(5, 2) , 0);	// RSTOUTn (not really used, could be used for USB Hub)
+	gpio_direction_output(IMX_GPIO_NR(5, 23) , 0);	// TS_NRST (reset for Touchscreen controller)
+	udelay(500);
+	gpio_set_value(IMX_GPIO_NR(5, 23), 1);
 	gpio_set_value(IMX_GPIO_NR(5, 2), 1);
 
 #ifdef CONFIG_MXC_SPI
 	setup_spi();
 #endif
-//	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
+
+	// Setup I2C
+	setup_i2c(0, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info0);
+	setup_i2c(1, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info1);
+	setup_i2c(2, CONFIG_SYS_I2C_SPEED, 0x7f, &i2c_pad_info2);
 
 #ifdef CONFIG_CMD_SATA
 	setup_sata();
@@ -682,6 +724,12 @@ int board_init(void)
 #ifdef CONFIG_USB_EHCI_MX6
 	setup_usb();
 #endif
+
+	// config jumper GPIOs as needed
+	imx_iomux_v3_setup_multiple_pads(peripheral_input_pad, ARRAY_SIZE(peripheral_input_pad));
+	gpio_direction_input(IMX_GPIO_NR(5, 21));	// LCD1024
+	gpio_direction_input(IMX_GPIO_NR(5, 22));	// LCD640
+
 
 	return 0;
 }

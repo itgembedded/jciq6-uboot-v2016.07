@@ -99,6 +99,7 @@
 #define CONFIG_ENV_DEFAULT_UBT_FILE	"u-boot.imx"
 #define CONFIG_ENV_DEFAULT_IMG_FILE	"zImage"
 #define CONFIG_ENV_DEFAULT_FDT_FILE	"imx6q-jciq6.dtb"
+#define CONFIG_ENV_DEFAULT_FDT_FILE_640	"imx6q-jciq6-640.dtb"
 #define CONFIG_ENV_DEFAULT_SCR_FILE	"boot-jciq6.scr"
 
 #define CONFIG_ENV_DEFAULT_ETH_ADDR         "00:0D:15:00:D1:75"
@@ -112,7 +113,7 @@
 	"tftp_dir=" CONFIG_ENV_DEFAULT_TFTP_DIR "\0" \
 	"script="   CONFIG_ENV_DEFAULT_SCR_FILE "\0" \
 	"image="    CONFIG_ENV_DEFAULT_IMG_FILE "\0" \
-	"fdt_file=" CONFIG_ENV_DEFAULT_FDT_FILE "\0" \
+	"fdt_file=\0" \
 	"fdt_addr=0x18000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
@@ -221,12 +222,8 @@
 		"video=mxcfb${fb}:dev=hdmi,1280x720M@60,if=RGB24\0" \
 	"video_args_lvds=setenv video_args $video_args " \
 		"video=mxcfb${fb}:dev=ldb,LDB-XGA,if=RGB888\0" \
-	"video_args_1024=setenv video_args $video_args " \
-		"video=mxcfb${fb}:dev=ldb,LDB-XGA,if=RGB888\0" \
-	"video_args_640=setenv video_args $video_args " \
-		"video=mxcfb${fb}:dev=ldb,640x480@60,if=RGB666\0" \
 	"fb=0\0" \
-	"video_interfaces=hdmi\0" \
+	"video_interfaces=\0" \
 	"video_args_script=" \
 		"for v in ${video_interfaces}; do " \
 			"run video_args_${v}; " \
@@ -247,6 +244,7 @@
 	"sataloadimage=fatload sata ${satadev}:${satapart} ${loadaddr} ${image}\0" \
 	"sataloadfdt=fatload sata ${satadev}:${satapart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=" \
+		"run check_j20; " \
 		VIDEO_ARGS_SCRIPT \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
@@ -263,11 +261,10 @@
 			"bootz; " \
 		"fi;\0" \
 	"bootmmc=echo Booting from MMC ...; " \
-		"run findfdt;" \
 		"mmc dev ${mmcdev};" \
 		"if mmc rescan; then " \
 			"if run loadbootscript; then " \
-			"run bootscript; " \
+				"run bootscript; " \
 			"else " \
 				"if run loadimage; then " \
 					"run mmcboot; " \
@@ -276,8 +273,8 @@
 			"fi; " \
 		"else run netboot; fi;\0" \
 	"bootsata=echo Booting from SATA ...; " \
+		"run check_j20; " \
 		VIDEO_ARGS_SCRIPT \
-		"run findfdt; " \
 		"run sataargs; " \
 		"if sata init; then " \
 			"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
@@ -299,8 +296,11 @@
 		"else run netboot; fi;\0" \
 	"netargs=setenv bootargs console=${console},${baudrate} " \
 		"root=/dev/nfs " \
+		VIDEO_ARGS \
 		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp rootwait rw\0" \
 	"netboot=echo Booting from net ...; " \
+		"run check_j20; " \
+		VIDEO_ARGS_SCRIPT \
 		"run set_ethernet; " \
 		"run update_set_filename; " \
 		"run netargs; " \
@@ -323,14 +323,22 @@
 		"else " \
 			"bootz; " \
 		"fi;\0" \
-	"findfdt="\
-		"if test $fdt_file = undefined; then " \
-			"if test $board_name = Q6 && test $board_rev = MX6Q; then " \
-				"setenv fdt_file " CONFIG_ENV_DEFAULT_FDT_FILE "; fi; " \
-			"if test $fdt_file = undefined; then " \
-				"echo WARNING: Could not determine dtb to use; fi; " \
-		"fi;\0" \
 	"bootnet=run netboot;\0" \
+	"check_j20=" \
+		"if test -z \"$video_interfaces\"; then " \
+			"setenv video_interfaces lvds; " \
+			"if j20 hdmi; then " \
+				"setenv video_interfaces hdmi; " \
+			"fi; " \
+		"fi; " \
+		"if test -z \"$fdt_file\"; then " \
+			"setenv fdt_file " CONFIG_ENV_DEFAULT_FDT_FILE "; " \
+			"if j20 640; then " \
+				"setenv fdt_file " CONFIG_ENV_DEFAULT_FDT_FILE_640 "; " \
+			"fi; " \
+		"fi;\0 " \
+		
+
 
 
 #define CONFIG_BOOTCOMMAND \
